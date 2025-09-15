@@ -6,11 +6,11 @@ namespace Cookworm.API
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class UsersAPI : ControllerBase
+    public class UsersController : ControllerBase
     {
         private readonly UserService _userService;
 
-        public UsersAPI(UserService userService)
+        public UsersController(UserService userService)
         {
             _userService = userService;
         }
