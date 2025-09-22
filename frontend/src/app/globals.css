@@ -1,6 +1,10 @@
 @import "tailwindcss";
 
 :root {
+
+  --welcome-width: 40%;
+  --form-width: calc(100% - var(--welcome-width));
+
   --background: #ffffff;
   --foreground: #171717;
 
