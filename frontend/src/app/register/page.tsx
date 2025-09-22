@@ -1,26 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useState, ChangeEvent, FormEvent } from "react";
+import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
+  const router = useRouter();
+
   const [formData, setFormData] = useState({
     username: "",
     email: "",
     password: "",
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleChange = (e) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    setSuccess(false);
 
     try {
       const res = await fetch("http://localhost:5103/api/users/signup", {
@@ -34,9 +35,9 @@ export default function RegisterPage() {
         throw new Error(errData.message || "Registration failed");
       }
 
-      setSuccess(true);
-      setFormData({ username: "", email: "", password: "" });
-    } catch (err) {
+      // redirect to login page after successful registration
+      router.push("/login");
+    } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
@@ -85,11 +86,6 @@ export default function RegisterPage() {
         </form>
 
         {error && <p className="text-red-500 mt-4 text-center">{error}</p>}
-        {success && (
-          <p className="text-green-500 mt-4 text-center">
-            Registration successful!
-          </p>
-        )}
       </div>
     </div>
   );
