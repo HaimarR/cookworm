@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using Cookworm.Data;
 using Cookworm.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -5,7 +7,11 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container
 builder.Services.AddControllers();
 
-// Register UserService so DI can provide it to UsersController
+// Register DbContext
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Register services
 builder.Services.AddScoped<UserService>();
 
 // Configure CORS so frontend can call the backend
