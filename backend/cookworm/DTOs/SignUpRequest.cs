@@ -1,4 +1,4 @@
-namespace Cookworm.Models
+namespace Cookworm.DTOs
 {
     public class SignUpRequest
     {

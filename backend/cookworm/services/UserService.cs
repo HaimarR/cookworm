@@ -1,37 +1,39 @@
+// Services/UserService.cs
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.EntityFrameworkCore;
+using Cookworm.Models;
+using Cookworm.DTOs;
+using Cookworm.Data;
 
 namespace Cookworm.Services
 {
-    using Cookworm.Models;
     public class UserService
     {
-        // Temporary in-memory storage; later replace with DB
-        private readonly List<BaseUser> _users = new List<BaseUser>();
+        private readonly AppDbContext _context;
 
-        public BaseUser? SignUp(SignUpRequest request)
+        public UserService(AppDbContext context)
         {
-            // Check duplicate email
-            if (_users.Any(u => u.Email == request.Email))
-            {
-                Console.WriteLine("Email already in use.");
-                return null;
-            }
+            _context = context;
+        }
 
-            // Hash password
+        public User? SignUp(SignUpRequest request)
+        {
+            if (_context.Users.Any(u => u.Email == request.Email))
+                return null;
+
             string hashedPassword = HashPassword(request.Password);
 
-            // Create user
-            var newUser = new BaseUser(
-                Guid.NewGuid().ToString(),
-                request.Username,
-                request.Email,
-                hashedPassword
-            );
+            var newUser = new User
+            {
+                Username = request.Username,
+                Email = request.Email,
+                PasswordHash = hashedPassword
+            };
 
-            _users.Add(newUser);
+            _context.Users.Add(newUser);
+            _context.SaveChanges();
 
-            // Return the user object
             return newUser;
         }
 
@@ -40,12 +42,6 @@ namespace Cookworm.Services
             using var sha256 = SHA256.Create();
             byte[] bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
             return Convert.ToBase64String(bytes);
-        }
-
-        // Optional: get user by email
-        public BaseUser? GetByEmail(string email)
-        {
-            return _users.FirstOrDefault(u => u.Email == email);
         }
     }
 }

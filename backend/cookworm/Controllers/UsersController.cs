@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using Cookworm.Models;
 using Cookworm.Services;
+using Cookworm.DTOs;
 
-namespace Cookworm.API
+namespace Cookworm.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -22,7 +22,6 @@ namespace Cookworm.API
             if (user == null)
                 return BadRequest("Email already in use.");
 
-            // For now, just return success + user ID
             return Ok(new { user.Id, user.Username, user.Email });
         }
     }

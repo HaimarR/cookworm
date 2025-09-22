@@ -1,24 +1,33 @@
+// Models/User.cs
 using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace Cookworm.Models
 {
-    public abstract class User
+    public enum UserRole
     {
-        public string Id { get; set; }
-        public string Username { get; set; }
-        public string Email { get; set; }
-        public string PasswordHash { get; set; }
-        public DateTime CreatedAt { get; set; }
+        Regular,
+        ContentCreator,
+        Chef
+    }
 
-        protected User(string id, string username, string email, string passwordHash)
-        {
-            Id = id;
-            Username = username;
-            Email = email;
-            PasswordHash = passwordHash;
-            CreatedAt = DateTime.Now;
-        }
+    public class User
+    {
+        [Key]
+        public Guid Id { get; set; } = Guid.NewGuid();
 
-        public abstract void ViewProfile();
+        [Required, MaxLength(100)]
+        public string Username { get; set; } = string.Empty;
+
+        [Required, MaxLength(255)]
+        public string Email { get; set; } = string.Empty;
+
+        [Required]
+        public string PasswordHash { get; set; } = string.Empty;
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        [Required]
+        public UserRole Role { get; set; } = UserRole.Regular;
     }
 }
