@@ -51,31 +51,38 @@ namespace Cookworm.Services
             };
         }
 
-        public UserResponse? UpdateUser(Guid id, UserRequest request)
+        public User? UpdateUser(Guid id, UserRequest request)
         {
             var user = _context.Users.FirstOrDefault(u => u.Id == id);
             if (user == null) return null;
 
+            // Check username uniqueness
+            if (!string.IsNullOrWhiteSpace(request.Username) &&
+                _context.Users.Any(u => u.Username == request.Username && u.Id != id))
+            {
+                throw new Exception("Username already taken.");
+            }
+
+            // Check email uniqueness
+            if (!string.IsNullOrWhiteSpace(request.Email) &&
+                _context.Users.Any(u => u.Email == request.Email && u.Id != id))
+            {
+                throw new Exception("Email already in use.");
+            }
+
             if (!string.IsNullOrWhiteSpace(request.Username))
                 user.Username = request.Username;
 
-            if (request.Bio != null)
-                user.Bio = request.Bio;
+            if (!string.IsNullOrWhiteSpace(request.Email))
+                user.Email = request.Email;
 
-            if (request.Location != null)
-                user.Location = request.Location;
+            user.Bio = request.Bio ?? user.Bio;
+            user.Location = request.Location ?? user.Location;
 
             _context.SaveChanges();
-
-            return new UserResponse
-            {
-                Id = user.Id,
-                Username = user.Username,
-                Email = user.Email,
-                Bio = user.Bio,
-                Location = user.Location
-            };
+            return user;
         }
+
 
         private string HashPassword(string password)
         {
