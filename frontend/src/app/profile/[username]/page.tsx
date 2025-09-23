@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 
 export default function Profile() {
   const router = useRouter();
+  const { username: routeUsername } = useParams<{ username: string }>();
+
   const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
   const [location, setLocation] = useState("");
@@ -13,6 +15,7 @@ export default function Profile() {
   useEffect(() => {
     const token = localStorage.getItem("token");
     const userId = localStorage.getItem("userId");
+    const loggedInUsername = localStorage.getItem("username");
 
     if (!token || !userId) {
       router.push("/auth");
@@ -21,9 +24,20 @@ export default function Profile() {
 
     const fetchProfile = async () => {
       try {
-        const res = await fetch(`http://localhost:5103/api/users/${userId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        let res;
+
+        // If visiting your own profile → fetch private data by ID (auth required)
+        if (routeUsername === loggedInUsername) {
+          res = await fetch(`http://localhost:5103/api/users/${userId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        } else {
+          // Visiting someone else → fetch public profile by username
+          res = await fetch(
+            `http://localhost:5103/api/users/by-username/${routeUsername}`
+          );
+        }
+
         if (!res.ok) throw new Error("Failed to fetch profile");
 
         const data = await res.json();
@@ -39,7 +53,11 @@ export default function Profile() {
     };
 
     fetchProfile();
-  }, [router]);
+  }, [router, routeUsername]);
+
+  const loggedInUsername =
+    typeof window !== "undefined" ? localStorage.getItem("username") : null;
+  const isOwnProfile = routeUsername === loggedInUsername;
 
   return (
     <main className="min-h-screen bg-[var(--gray-soft)] text-black flex justify-center py-10">
@@ -55,15 +73,24 @@ export default function Profile() {
 
           {/* User Info */}
           <div className="flex-1">
-            {/* Username + Edit Button */}
+            {/* username + Edit/Follow Button */}
             <div className="flex items-center gap-4 mb-4">
               <h1 className="text-2xl font-bold">{username}</h1>
-              <button
-                onClick={() => router.push("/profile/edit")}
-                className="px-4 py-1 border border-gray-300 rounded-lg text-sm hover:bg-[var(--green-soft)] hover:bg-opacity-50 transition"
-              >
-                Edit Profile
-              </button>
+              {isOwnProfile ? (
+                <button
+                  onClick={() => router.push("/profile/edit")}
+                  className="px-4 py-1 border border-gray-300 rounded-lg text-sm hover:bg-[var(--green-soft)] hover:bg-opacity-50 transition"
+                >
+                  Edit Profile
+                </button>
+              ) : (
+                <button
+                  onClick={() => alert("Follow logic goes here")}
+                  className="px-4 py-1 border border-gray-300 rounded-lg text-sm hover:bg-[var(--green-soft)] hover:bg-opacity-50 transition"
+                >
+                  Follow
+                </button>
+              )}
             </div>
 
             {/* Stats */}
@@ -79,7 +106,7 @@ export default function Profile() {
               </span>
             </div>
 
-            {/* Bio */}
+            {/* bio */}
             <div>
               <p className="font-semibold">{location}</p>
               <p className="text-sm">{loading ? "Loading..." : bio}</p>

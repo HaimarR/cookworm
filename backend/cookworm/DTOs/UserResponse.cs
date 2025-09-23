@@ -7,5 +7,6 @@ namespace Cookworm.DTOs
         public string Email { get; set; } = string.Empty;
         public string? Bio { get; set; }
         public string? Location { get; set; }
+        public int Followers { get; set; } = 0;
     }
 }

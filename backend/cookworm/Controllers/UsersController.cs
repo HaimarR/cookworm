@@ -25,6 +25,16 @@ namespace Cookworm.Controllers
             return Ok(new { user.Id, user.Username, user.Email });
         }
 
+        [HttpGet("by-username/{username}")]
+        public IActionResult GetUserByUsername(string username)
+        {
+            var user = _userService.GetUserByUsername(username);
+            if (user == null)
+                return NotFound();
+
+            return Ok(user);
+        }
+
         [HttpGet("{id}")]
         public IActionResult GetUser(Guid id)
         {
@@ -44,5 +54,14 @@ namespace Cookworm.Controllers
 
             return Ok(updated);
         }
+
+        [HttpGet("search")]
+        public IActionResult SearchUsers([FromQuery] string username)
+        {
+            var results = _userService.SearchUsers(username);
+            return Ok(results);
+        }
+
+
     }
 }

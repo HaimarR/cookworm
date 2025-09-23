@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Home as HomeIcon, BookOpen, User } from "lucide-react";
 
 export default function Home() {
   const router = useRouter();

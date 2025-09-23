@@ -92,7 +92,7 @@ export default function EditProfilePage() {
 
         <form onSubmit={handleSave} className="space-y-4">
           <div>
-            <label className="block font-semibold mb-1">Username</label>
+            <label className="block font-semibold mb-1">username</label>
             <input
               type="text"
               value={username}
@@ -103,7 +103,7 @@ export default function EditProfilePage() {
           </div>
 
           <div>
-            <label className="block font-semibold mb-1">Email</label>
+            <label className="block font-semibold mb-1">email</label>
             <input
                 type="email"
                 value={email}
@@ -115,7 +115,7 @@ export default function EditProfilePage() {
 
 
           <div>
-            <label className="block font-semibold mb-1">Bio</label>
+            <label className="block font-semibold mb-1">bio</label>
             <textarea
               value={bio}
               onChange={(e) => setBio(e.target.value)}
