@@ -90,7 +90,7 @@ export default function Profile() {
         <hr className="border-gray-300 mb-6" />
 
         {/* Posts Grid */}
-        {/* <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           {Array.from({ length: 9 }).map((_, i) => (
             <div key={i} className="bg-gray-200 aspect-square">
               <img
@@ -100,7 +100,7 @@ export default function Profile() {
               />
             </div>
           ))}
-        </div> */}
+        </div>
       </div>
     </main>
   );
