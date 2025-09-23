@@ -1,4 +1,3 @@
-// Controllers/AuthController.cs
 using Microsoft.AspNetCore.Mvc;
 using Cookworm.Services;
 using Cookworm.DTOs;

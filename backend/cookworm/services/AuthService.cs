@@ -21,22 +21,6 @@ namespace Cookworm.Services
             _config = config;
         }
 
-        public async Task<LoginResponse?> Login(LoginRequest request)
-        {
-            Console.WriteLine($"Identifier received: '{request.Identifier}'");
-            Console.WriteLine($"Password received: '{request.Password}'");
-
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Email == request.Identifier || u.Username == request.Identifier);
-
-            if (user == null)
-                return null;
-
-            if (!VerifyPassword(request.Password, user.PasswordHash))
-                return null;
-
-            return GenerateJwtToken(user, request.RememberMe);
-        }
 
         private bool VerifyPassword(string password, string storedHash)
         {
@@ -45,15 +29,10 @@ namespace Cookworm.Services
             var hash = Convert.ToBase64String(hashBytes);
             return hash == storedHash;
         }
-
-        private LoginResponse GenerateJwtToken(User user, bool rememberMe)
+        private string GenerateJwtToken(User user, bool rememberMe)
         {
-            var key = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(_config["Jwt:Key"]!)
-            );
-
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
             var expires = rememberMe ? DateTime.UtcNow.AddDays(30) : DateTime.UtcNow.AddHours(1);
 
             var claims = new[]
@@ -72,11 +51,28 @@ namespace Cookworm.Services
                 signingCredentials: creds
             );
 
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        public async Task<LoginResponse?> Login(LoginRequest request)
+        {
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == request.Identifier || u.Username == request.Identifier);
+
+            if (user == null || !VerifyPassword(request.Password, user.PasswordHash))
+                return null;
+
+            var token = GenerateJwtToken(user, request.RememberMe);
+
             return new LoginResponse
             {
-                Token = new JwtSecurityTokenHandler().WriteToken(token),
-                ExpiresAt = expires
+                Token = token,
+                ExpiresAt = request.RememberMe ? DateTime.UtcNow.AddDays(30) : DateTime.UtcNow.AddHours(1),
+                UserId = user.Id,
+                Username = user.Username,
+                Email = user.Email
             };
         }
+
     }
 }

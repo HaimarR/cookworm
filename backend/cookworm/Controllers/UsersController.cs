@@ -24,5 +24,25 @@ namespace Cookworm.Controllers
 
             return Ok(new { user.Id, user.Username, user.Email });
         }
+
+        [HttpGet("{id}")]
+        public IActionResult GetUser(Guid id)
+        {
+            var user = _userService.GetUserById(id);
+            if (user == null)
+                return NotFound();
+
+            return Ok(user);
+        }
+
+        [HttpPut("{id}")]
+        public IActionResult UpdateUser(Guid id, [FromBody] UserRequest request)
+        {
+            var updated = _userService.UpdateUser(id, request);
+            if (updated == null)
+                return NotFound();
+
+            return Ok(updated);
+        }
     }
 }
