@@ -48,8 +48,15 @@ export default function AuthPage() {
     setError("");
     try {
       const result = await login(identifier, password, rememberMe);
+
+      // ✅ Save everything you’ll need later
       localStorage.setItem("token", result.token);
       localStorage.setItem("expiresAt", result.expiresAt);
+      localStorage.setItem("userId", result.userId);
+      localStorage.setItem("username", result.username);
+      localStorage.setItem("email", result.email);
+
+      // redirect to homepage
       window.location.href = "/";
     } catch (err: any) {
       setError(err.message);
@@ -57,6 +64,7 @@ export default function AuthPage() {
       setLoading(false);
     }
   }
+
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();

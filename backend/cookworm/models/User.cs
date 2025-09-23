@@ -1,4 +1,3 @@
-// Models/User.cs
 using System;
 using System.ComponentModel.DataAnnotations;
 
@@ -8,7 +7,8 @@ namespace Cookworm.Models
     {
         Regular,
         ContentCreator,
-        Chef
+        Chef,
+        Moderator
     }
 
     public class User
@@ -29,5 +29,11 @@ namespace Cookworm.Models
 
         [Required]
         public UserRole Role { get; set; } = UserRole.Regular;
+
+        [MaxLength(500)]
+        public string? Bio { get; set; }
+
+        [MaxLength(100)]
+        public string? Location { get; set; }
     }
 }

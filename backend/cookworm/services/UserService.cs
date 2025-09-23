@@ -1,4 +1,3 @@
-// Services/UserService.cs
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
@@ -35,6 +34,47 @@ namespace Cookworm.Services
             _context.SaveChanges();
 
             return newUser;
+        }
+
+        public UserResponse? GetUserById(Guid id)
+        {
+            var user = _context.Users.FirstOrDefault(u => u.Id == id);
+            if (user == null) return null;
+
+            return new UserResponse
+            {
+                Id = user.Id,
+                Username = user.Username,
+                Email = user.Email,
+                Bio = user.Bio,
+                Location = user.Location
+            };
+        }
+
+        public UserResponse? UpdateUser(Guid id, UserRequest request)
+        {
+            var user = _context.Users.FirstOrDefault(u => u.Id == id);
+            if (user == null) return null;
+
+            if (!string.IsNullOrWhiteSpace(request.Username))
+                user.Username = request.Username;
+
+            if (request.Bio != null)
+                user.Bio = request.Bio;
+
+            if (request.Location != null)
+                user.Location = request.Location;
+
+            _context.SaveChanges();
+
+            return new UserResponse
+            {
+                Id = user.Id,
+                Username = user.Username,
+                Email = user.Email,
+                Bio = user.Bio,
+                Location = user.Location
+            };
         }
 
         private string HashPassword(string password)
