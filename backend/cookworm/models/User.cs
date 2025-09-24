@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.Collections.Generic;
 
 namespace Cookworm.Models
 {
@@ -35,5 +36,9 @@ namespace Cookworm.Models
 
         [MaxLength(100)]
         public string? Location { get; set; }
+
+        // Navigation for following system
+        public ICollection<Follow> Followers { get; set; } = new List<Follow>();
+        public ICollection<Follow> Following { get; set; } = new List<Follow>();
     }
 }

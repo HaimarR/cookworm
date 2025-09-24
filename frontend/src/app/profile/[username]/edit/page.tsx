@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 
 export default function EditProfilePage() {
   const router = useRouter();
+  const { username: routeUsername } = useParams<{ username: string }>();
+
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [bio, setBio] = useState("");
@@ -25,6 +27,11 @@ export default function EditProfilePage() {
 
     const fetchProfile = async () => {
       try {
+        // You can read public info by username:
+        // const publicRes = await fetch(`http://localhost:5103/api/profile/${encodeURIComponent(routeUsername)}`);
+        // const publicData = await publicRes.json();
+
+        // But since you need email (private), fetch by ID (auth):
         const res = await fetch(`http://localhost:5103/api/users/${userId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -44,7 +51,7 @@ export default function EditProfilePage() {
     };
 
     fetchProfile();
-  }, [router]);
+  }, [router, routeUsername]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,10 +74,9 @@ export default function EditProfilePage() {
 
       if (!res.ok) throw new Error("Failed to update profile");
 
-      const data = await res.json();
+      await res.json();
       setMessage("Profile updated!");
-      // Redirect back to profile view after short delay
-      setTimeout(() => router.push("/profile"), 1000);
+      setTimeout(() => router.push(`/profile/${username}`), 800);
     } catch (err) {
       console.error(err);
       setError("Error saving profile.");
@@ -105,14 +111,13 @@ export default function EditProfilePage() {
           <div>
             <label className="block font-semibold mb-1">email</label>
             <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full border border-[var(--gray-soft)] rounded-lg p-2 text-black"
-                required
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full border border-[var(--gray-soft)] rounded-lg p-2 text-black"
+              required
             />
           </div>
-
 
           <div>
             <label className="block font-semibold mb-1">bio</label>

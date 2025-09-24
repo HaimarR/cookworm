@@ -68,6 +68,18 @@ namespace Cookworm.Services
             };
         }
 
+        public async Task<User?> GetByUsernameAsync(string username) =>
+            await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+
+        public async Task<Guid?> GetIdByUsernameAsync(string username)
+        {
+            var user = await _context.Users
+                .Where(u => u.Username == username)
+                .Select(u => new { u.Id })
+                .FirstOrDefaultAsync();
+            return user?.Id;
+        }
+
 
 
         public User? UpdateUser(Guid id, UserRequest request)
@@ -102,23 +114,40 @@ namespace Cookworm.Services
             return user;
         }
 
-        public List<UserResponse> SearchUsers(string username)
+         public List<UserResponse> SearchUsers(string username)
         {
-            if (string.IsNullOrWhiteSpace(username))
-                return new List<UserResponse>();
+            var term = (username ?? string.Empty).Trim();
 
-            return [.. _context.Users
-                .Where(u => u.Username.Contains(username))
+            // basic search by username (case-insensitive)
+            var users = _context.Users
+                .AsNoTracking()
+                .Where(u => EF.Functions.ILike(u.Username, $"%{term}%"))
                 .Select(u => new UserResponse
                 {
                     Id = u.Id,
                     Username = u.Username,
-                    Email = u.Email,
                     Bio = u.Bio,
                     Location = u.Location,
-                    Followers = 0 // placeholder
+                    // Email intentionally omitted for public search
                 })
-                .Take(10)];
+                .ToList();
+
+            if (users.Count == 0) return users;
+
+            var ids = users.Select(u => u.Id).ToList();
+
+            // COUNT FOLLOWERS PER RETURNED USER -> group by FollowedId
+            var followerCounts = _context.Follows
+                .AsNoTracking()
+                .Where(f => ids.Contains(f.FollowedId))
+                .GroupBy(f => f.FollowedId)
+                .Select(g => new { UserId = g.Key, Count = g.Count() })
+                .ToDictionary(x => x.UserId, x => x.Count);
+
+            foreach (var u in users)
+                u.Followers = followerCounts.TryGetValue(u.Id, out var c) ? c : 0;
+
+            return users;
         }
 
 
