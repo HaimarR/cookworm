@@ -20,9 +20,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${bodyClass} min-h-screen flex bg-[var(--gray-soft)] text-black`}>
+      <body className={`${bodyClass} min-h-screen bg-[var(--gray-soft)] text-black`}>
         <SidebarWrapper>{children}</SidebarWrapper>
       </body>
+
+
     </html>
   );
 }

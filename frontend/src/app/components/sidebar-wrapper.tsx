@@ -8,9 +8,11 @@ export function SidebarWrapper({ children }: { children: React.ReactNode }) {
   const hideSidebar = pathname.startsWith("/auth");
 
   return (
-    <>
+    <div className="w-full">
       {!hideSidebar && <Sidebar />}
-      <main className="flex-1">{children}</main>
-    </>
+      <main className="ml-60 min-h-screen bg-[var(--gray-soft)] text-black">
+        {children}
+      </main>
+    </div>
   );
 }

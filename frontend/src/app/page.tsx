@@ -1,33 +1,49 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import PostCard from "./components/post-card";
+
+type Post = {
+  id: number;
+  username: string;
+  imageUrl: string;
+  caption: string;
+  createdAt: string;
+};
 
 export default function Home() {
   const router = useRouter();
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Auth check
+  // Auth check + fetch posts
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) {
+    const username = localStorage.getItem("username");
+
+    if (!token || !username) {
       router.push("/auth");
+      return;
     }
+
+    const fetchFeed = async () => {
+      try {
+        const res = await fetch(`http://localhost:5103/api/users/${encodeURIComponent(username)}/feed`);
+        if (res.ok) {
+          const data = await res.json();
+          setPosts(data);
+        }
+      } catch (err) {
+        console.error("Error loading feed", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFeed();
   }, [router]);
 
-  const posts = [
-    {
-      id: 1,
-      username: "foodie123",
-      image: "https://source.unsplash.com/600x400/?food",
-      caption: "Trying out a new pasta recipe 🍝",
-    },
-    {
-      id: 2,
-      username: "chef_life",
-      image: "https://source.unsplash.com/600x400/?cooking",
-      caption: "Behind the scenes in the kitchen 🔪",
-    },
-  ];
 
   return (
     <main className="min-h-screen bg-[var(--gray-soft)] text-black flex">
@@ -35,23 +51,13 @@ export default function Home() {
       <div className="flex-1 flex justify-center mt-6 gap-8 px-4">
         {/* Feed */}
         <section className="flex-1 max-w-lg">
-          {posts.map((post) => (
-            <div
-              key={post.id}
-              className="bg-[var(--foreground)] rounded-xl shadow-sm mb-6 border border-[var(--gray-soft)]"
-            >
-              <div className="flex items-center px-4 py-2 border-b border-[var(--gray-soft)]">
-                <span className="font-semibold text-black">{post.username}</span>
-              </div>
-              <img src={post.image} alt="" className="w-full" />
-              <div className="px-4 py-3">
-                <p className="text-sm text-black">
-                  <span className="font-semibold mr-1">{post.username}</span>
-                  {post.caption}
-                </p>
-              </div>
-            </div>
-          ))}
+          {loading ? (
+            <p className="text-center text-gray-500">Loading feed...</p>
+          ) : posts.length === 0 ? (
+            <p className="text-center text-gray-500">No posts yet</p>
+          ) : (
+            posts.map((post) => <PostCard className="mb-6" key={post.id} post={post} />)
+          )}
         </section>
 
         {/* Suggestions Sidebar */}

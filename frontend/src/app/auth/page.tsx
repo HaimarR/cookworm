@@ -103,7 +103,7 @@ export default function AuthPage() {
           >
             <input
               type="text"
-              placeholder="email or username"
+              placeholder="Email or Username"
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
               className="w-full border p-2 rounded text-black"
@@ -182,7 +182,7 @@ export default function AuthPage() {
           >
             <input
               type="text"
-              placeholder="username"
+              placeholder="Username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               className="w-full border p-2 rounded text-black"
@@ -190,7 +190,7 @@ export default function AuthPage() {
             />
             <input
               type="email"
-              placeholder="email"
+              placeholder="Email"
               value={regEmail}
               onChange={(e) => setRegEmail(e.target.value)}
               className="w-full border p-2 rounded text-black"

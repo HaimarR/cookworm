@@ -3,8 +3,15 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import ProfileList, { type UserProfile } from "../../components/profile-list";
-// If you prefer using the API helpers, you can import them like this instead:
-// import { followUser, unfollowUser, getFollowStats, getProfile, getFollowers, getFollowing } from "../../lib/api";
+import PostCard from "../../components/post-card";
+
+type Post = {
+  id: number;
+  caption: string;
+  imageUrl: string;
+  createdAt: string;
+  username: string;
+};
 
 export default function Profile() {
   const router = useRouter();
@@ -23,12 +30,15 @@ export default function Profile() {
   const [panelOpen, setPanelOpen] = useState<null | "followers" | "following">(null);
   const [panelItems, setPanelItems] = useState<UserProfile[]>([]);
 
+  // posts state
+  const [posts, setPosts] = useState<Post[]>([]);
+
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     const userId = localStorage.getItem("userId");
-    const loggedInUsername = localStorage.getItem("username");
 
-    // If your app requires auth to view profiles, keep this redirect:
     if (!token || !userId) {
       router.push("/auth");
       return;
@@ -45,7 +55,7 @@ export default function Profile() {
         setBio(data.bio || "");
         setLocation(data.location || "");
 
-        // Stats (public; include token if present to compute isFollowing)
+        // Stats
         const statsRes = await fetch(
           `http://localhost:5103/api/profile/${encodeURIComponent(routeUsername)}/stats`,
           { headers: token ? { Authorization: `Bearer ${token}` } : {} }
@@ -55,6 +65,13 @@ export default function Profile() {
           setFollowersCount(stats.followersCount);
           setFollowingCount(stats.followingCount);
           setIsFollowing(stats.isFollowing);
+        }
+
+        // Fetch posts
+        const postsRes = await fetch(`http://localhost:5103/api/users/${encodeURIComponent(routeUsername)}/posts`);
+        if (postsRes.ok) {
+          const userPosts = await postsRes.json();
+          setPosts(userPosts);
         }
       } catch (err) {
         console.error(err);
@@ -96,7 +113,7 @@ export default function Profile() {
       if (statsRes.ok) {
         const stats = await statsRes.json();
         setFollowersCount(stats.followersCount);
-        setFollowingCount(stats.followingCount);
+        setFollowingCount(stats.isFollowing);
         setIsFollowing(stats.isFollowing);
       }
     } catch (err) {
@@ -104,7 +121,6 @@ export default function Profile() {
     }
   }
 
-  // Open list panel
   async function openList(kind: "followers" | "following") {
     try {
       const res = await fetch(
@@ -144,7 +160,6 @@ export default function Profile() {
 
           {/* User Info */}
           <div className="flex-1">
-            {/* username + Edit/Follow Button */}
             <div className="flex items-center gap-4 mb-4">
               <h1 className="text-2xl font-bold">{username}</h1>
               {isOwnProfile ? (
@@ -164,10 +179,9 @@ export default function Profile() {
               )}
             </div>
 
-            {/* Stats */}
             <div className="flex gap-6 mb-4">
               <span>
-                <strong>0</strong> posts
+                <strong>{posts.length}</strong> posts
               </span>
 
               <button
@@ -187,7 +201,6 @@ export default function Profile() {
               </button>
             </div>
 
-            {/* bio */}
             <div>
               <p className="font-semibold">{location}</p>
               <p className="text-sm">{loading ? "Loading..." : bio}</p>
@@ -199,19 +212,36 @@ export default function Profile() {
 
         {/* Posts Grid */}
         <div className="grid grid-cols-3 gap-2">
-          {Array.from({ length: 9 }).map((_, i) => (
-            <div key={i} className="bg-gray-200 aspect-square">
+          {posts.map((post) => (
+            <div
+              key={post.id}
+              className="bg-gray-200 aspect-square cursor-pointer"
+              onClick={() => setSelectedPost(post)}
+            >
               <img
-                src={`https://source.unsplash.com/400x400/?food&sig=${i}`}
-                alt={`Post ${i + 1}`}
+                src={`http://localhost:5103${post.imageUrl}`}
+                alt={post.caption}
                 className="w-full h-full object-cover"
               />
             </div>
           ))}
         </div>
-      </div>
 
-      {/* Slide-over panel for followers/following */}
+        {/* Post Modal */}
+        {selectedPost && (
+          <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
+            <div className="bg-white rounded-xl shadow-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
+              <PostCard post={selectedPost} />
+            </div>
+            <button
+              className="absolute top-4 right-4 text-white text-2xl"
+              onClick={() => setSelectedPost(null)}
+            >
+              ✕
+            </button>
+          </div>
+        )}
+      </div>
       {panelOpen && (
         <div className="fixed right-0 top-0 h-full w-80 bg-white shadow-lg p-4 z-50">
           <div className="flex justify-between items-center mb-4">

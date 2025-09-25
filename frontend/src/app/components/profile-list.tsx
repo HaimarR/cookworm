@@ -6,8 +6,10 @@ export type UserProfile = {
   id: string;
   username: string;
   followers: number;
-  isFollowing?: boolean; // backend should include this, otherwise we'll fetch it
+  isFollowing?: boolean; // may come from backend; if not, we'll fetch it
 };
+
+type ProfileRow = UserProfile & { _fetched?: boolean }; // internal flag
 
 export default function ProfileList({
   profiles,
@@ -16,22 +18,65 @@ export default function ProfileList({
   profiles: UserProfile[];
   onSelect: (p: UserProfile) => void;
 }) {
-  const [items, setItems] = useState<UserProfile[]>(profiles);
+  const [items, setItems] = useState<ProfileRow[]>(
+    profiles.map((p) => ({ ...p, _fetched: typeof p.isFollowing === "boolean" }))
+  );
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    setItems(profiles);
+    setCurrentUserId(localStorage.getItem("userId") || null);
+  }, []);
+
+  // Re-hydrate when profiles prop changes
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    // Seed items immediately so UI renders fast
+    setItems(profiles.map((p) => ({ ...p, _fetched: typeof p.isFollowing === "boolean" })));
+
+    if (!token) return;
+
+    const abort = new AbortController();
+
+    (async () => {
+      const hydrated = await Promise.all(
+        profiles.map(async (p) => {
+          // If backend already provided isFollowing, keep it
+          if (typeof p.isFollowing === "boolean") return { ...p, _fetched: true };
+
+          try {
+            const res = await fetch(
+              `http://localhost:5103/api/profile/${encodeURIComponent(p.username)}/stats`,
+              { headers: { Authorization: `Bearer ${token}` }, signal: abort.signal }
+            );
+            if (!res.ok) return { ...p, _fetched: true }; // fall back (button will show "Follow")
+            const stats = await res.json();
+            return {
+              ...p,
+              followers: typeof stats.followersCount === "number" ? stats.followersCount : p.followers,
+              isFollowing: !!stats.isFollowing,
+              _fetched: true,
+            };
+          } catch {
+            return { ...p, _fetched: true };
+          }
+        })
+      );
+
+      setItems(hydrated);
+    })();
+
+    return () => abort.abort();
   }, [profiles]);
 
-  async function toggleFollow(p: UserProfile) {
+  async function toggleFollow(p: ProfileRow) {
     const token = localStorage.getItem("token");
     if (!token) return;
 
     try {
       const endpoint = p.isFollowing ? "unfollow" : "follow";
       await fetch(
-        `http://localhost:5103/api/profile/${encodeURIComponent(
-          p.username
-        )}/${endpoint}`,
+        `http://localhost:5103/api/profile/${encodeURIComponent(p.username)}/${endpoint}`,
         {
           method: "POST",
           headers: {
@@ -41,11 +86,9 @@ export default function ProfileList({
         }
       );
 
-      // refresh stats for that user
+      // Refresh stats after mutation
       const statsRes = await fetch(
-        `http://localhost:5103/api/profile/${encodeURIComponent(
-          p.username
-        )}/stats`,
+        `http://localhost:5103/api/profile/${encodeURIComponent(p.username)}/stats`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (statsRes.ok) {
@@ -56,7 +99,8 @@ export default function ProfileList({
               ? {
                   ...u,
                   followers: stats.followersCount,
-                  isFollowing: stats.isFollowing,
+                  isFollowing: !!stats.isFollowing,
+                  _fetched: true,
                 }
               : u
           )
@@ -92,13 +136,23 @@ export default function ProfileList({
             </div>
           </button>
 
-          {/* Right: follow/unfollow */}
-          <button
-            onClick={() => toggleFollow(profile)}
-            className="px-3 py-1 text-black border border-gray-300 rounded-lg text-sm hover:bg-[var(--green-soft)] hover:bg-opacity-50 transition"
-          >
-            {profile.isFollowing ? "Unfollow" : "Follow"}
-          </button>
+          {/* Right: follow/unfollow (hidden for self). Button hidden until that row is hydrated */}
+          {currentUserId !== profile.id && profile._fetched && (
+            <button
+              onClick={() => toggleFollow(profile)}
+              className={`px-3 py-1 text-sm border rounded-lg transition ${
+                profile.isFollowing
+                  ? "bg-[var(--green-soft)] text-black border-gray-300 hover:opacity-90"
+                  : "text-black border-gray-300 hover:bg-[var(--green-soft)]/50"
+              }`}
+            >
+              {profile.isFollowing ? "Following" : "Follow"}
+            </button>
+          )}
+          {/* Optional tiny placeholder while fetching */}
+          {currentUserId !== profile.id && !profile._fetched && (
+            <div className="h-8 w-20 rounded-lg bg-gray-200 animate-pulse" aria-hidden />
+          )}
         </div>
       ))}
     </div>

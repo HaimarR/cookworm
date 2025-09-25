@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Text;
 using Cookworm.Data;
 using Cookworm.Services;
+using System.IdentityModel.Tokens.Jwt;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +15,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<FollowService>();
+builder.Services.AddScoped<PostService>();
+builder.Services.AddScoped<FeedService>();
 
 // JWT auth
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -30,8 +33,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = config["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(config["Jwt:Key"]!)
-            )
+            ),
+            NameClaimType = JwtRegisteredClaimNames.Sub
         };
+        options.MapInboundClaims = false;
     });
 
 builder.Services.AddCors(options =>
@@ -54,6 +59,8 @@ var app = builder.Build();
 
 app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
+
+app.UseStaticFiles();
 
 app.UseAuthentication();
 app.UseAuthorization();

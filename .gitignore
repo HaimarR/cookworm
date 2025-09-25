@@ -45,3 +45,8 @@ out/
 dist/
 
 backend/cookworm/appsettings.json
+
+*package.json
+*package-lock.json
+
+backend\cookworm\wwwroot\*

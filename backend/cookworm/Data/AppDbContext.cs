@@ -9,6 +9,7 @@ namespace Cookworm.Data
 
         public DbSet<User> Users { get; set; }
         public DbSet<Follow> Follows { get; set; }
+        public DbSet<Post> Posts { get; set; }   // ✅ Added
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -47,6 +48,25 @@ namespace Cookworm.Data
                     .WithMany(u => u.Followers)
                     .HasForeignKey(f => f.FollowedId)
                     .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Posts mapping
+            modelBuilder.Entity<Post>(entity =>
+            {
+                entity.ToTable("posts");
+                entity.HasKey(p => p.Id);
+
+                entity.Property(p => p.Id).HasColumnName("id");
+                entity.Property(p => p.UserId).HasColumnName("user_id");
+                entity.Property(p => p.Caption).HasColumnName("caption");
+                entity.Property(p => p.ImageUrl).HasColumnName("image_url");
+                entity.Property(p => p.CreatedAt).HasColumnName("created_at");
+
+                // Optional: navigation to User
+                entity.HasOne<User>()
+                      .WithMany()
+                      .HasForeignKey(p => p.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
         }
     }

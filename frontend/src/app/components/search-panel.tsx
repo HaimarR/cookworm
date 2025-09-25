@@ -3,7 +3,13 @@
 import { useEffect, useState } from "react";
 import ProfileList, { type UserProfile } from "../components/profile-list";
 
-export default function SearchPanel({ onClose }: { onClose: () => void }) {
+export default function SearchPanel({
+  onClose,
+  collapsed,
+}: {
+  onClose: () => void;
+  collapsed: boolean;
+}) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<UserProfile[]>([]);
   const [recentProfiles, setRecentProfiles] = useState<UserProfile[]>([]);
@@ -34,7 +40,7 @@ export default function SearchPanel({ onClose }: { onClose: () => void }) {
         } catch (err) {
           console.error("Failed to refresh followers for", p.username, err);
         }
-        return p; // fallback to stored version
+        return p; // fallback
       })
     ).then((updated) => setRecentProfiles(updated));
   }, []);
@@ -81,7 +87,7 @@ export default function SearchPanel({ onClose }: { onClose: () => void }) {
   const displayList = query.trim() ? results : recentProfiles;
 
   return (
-    <div className="fixed left-60 top-0 h-full w-80 bg-white border-r shadow-lg p-4 z-50">
+    <div className="h-full bg-white w-70 border-none p-4">
       <div className="flex justify-between items-center mb-4">
         <h2 className="font-bold text-black text-lg">Search</h2>
         <button onClick={onClose} className="text-black">
