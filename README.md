@@ -61,13 +61,14 @@ The end goal is for Cookworm to make home cooking easier, healthier, and a lot m
 - User authentication: sign up, log in with JWT
 - Basic user profile: view and edit profile details (username, bio, email, location)
 - Combined login & registration page with animated transitions
-- Backend API for user endpoints (`/signup`, `/login`, `/users/{id}`)
+- Backend API for user endpoints (`/signup`, `/login`, `/users/{username}`)
 - DTOs for structured responses
 - Project setup with frontend/backend separation
+- Follower/following system with counts
+- Post creation (Images locally saved)
 
 ### 🔜 Upcoming
 
-- Follower/following system with counts
 - Content creation (posts and structured recipes)
 - Engagement (likes, comments, shares)
 - Pantry ingredient management with recipe matching
@@ -75,6 +76,7 @@ The end goal is for Cookworm to make home cooking easier, healthier, and a lot m
 - Moderation & verification of chefs/creators
 - Nutrition filters and health-focused tags
 - Full database integration with migrations
+- Explore cloud image storage options
 - Deployment with Docker and CI/CD
 
 ---
